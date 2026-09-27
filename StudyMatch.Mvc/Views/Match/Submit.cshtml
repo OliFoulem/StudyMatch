@@ -1,0 +1,3 @@
+@model string
+<h1>Confirmation</h1><p>Confirmez l'envoi de votre demande de jumelage.</p>
+<form method="post" action="/match/submit">@Html.AntiForgeryToken()<input type="hidden" name="payload" value="@Model"/><button type="submit">Envoyer la demande</button> <a href="/match">Modifier</a></form>

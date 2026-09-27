@@ -1,0 +1,5 @@
+@model StudyMatchStore
+@using StudyMatch.Components.Components
+@using Microsoft.AspNetCore.Mvc.Rendering
+<h1>Trouver mon groupe</h1><p>Indiquez votre cours et vos disponibilités pour trouver des étudiants compatibles.</p>
+<div class="card"><component type="typeof(MatchWizard)" render-mode="ServerPrerendered" param-Courses="Model.Courses" param-Slots="Model.Slots" /></div>

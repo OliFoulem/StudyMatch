@@ -1,0 +1,4 @@
+@model MatchResult
+<h1>Résultat du jumelage</h1><p role="status">@Model.Message</p>
+@if (Model.Group is not null) { <article class="card"><h2>@Model.Group.Course.Name</h2><p><strong>Horaire :</strong> @Model.Group.Slot</p><p><strong>Membres :</strong> @string.Join(", ", Model.Group.Members.Select(m => m.Name))</p><p><strong>Local :</strong> @(Model.Group.RoomName ?? "Aucun disponible")</p></article> }
+<a class="button" href="/groups">Voir les groupes</a>

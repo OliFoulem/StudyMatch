@@ -1,0 +1,64 @@
+@using StudyMatch.Components.Components
+<ProgressSteps Current="step" />
+<EditForm Model="form" OnValidSubmit="Next">
+    @if (step == 1)
+    {
+        <h2>1. Choisir un cours</h2>
+        <label for="student">Votre nom</label>
+        <InputText id="student" class="input" @bind-Value="form.StudentName" />
+        <label for="course">Cours</label>
+        <InputSelect id="course" class="input" @bind-Value="form.CourseCode">
+            <option value="">Choisir un cours</option>
+            @foreach (var course in Courses) { <option value="@course.Code">@course.Code - @course.Name</option> }
+        </InputSelect>
+    }
+    else if (step == 2)
+    {
+        <h2>2. Choisir vos disponibilités</h2>
+        <p>Cochez au moins un créneau où vous pouvez étudier.</p>
+        @foreach (var slot in Slots.Select((value, index) => (value, index)))
+        {
+            var id = slot.index;
+            <label class="check"><InputCheckbox @bind-Value="selected[id]" /> @slot.value</label>
+        }
+    }
+    else
+    {
+        <h2>3. Vérifier votre demande</h2>
+        <p><strong>Étudiant :</strong> @form.StudentName</p>
+        <p><strong>Cours :</strong> @Courses.FirstOrDefault(c => c.Code == form.CourseCode)?.Name</p>
+        <p><strong>Disponibilités :</strong> @string.Join(", ", Slots.Where((_, i) => selected[i]))</p>
+    }
+    @if (!string.IsNullOrWhiteSpace(error)) { <p class="error" role="alert">@error</p> }
+    <div class="actions">
+        @if (step > 1) { <button type="button" class="secondary" @onclick="Previous">Précédent</button> }
+        <button type="submit">@(step == 3 ? "Confirmer" : "Suivant")</button>
+    </div>
+</EditForm>
+@code {
+    [Parameter, EditorRequired] public IReadOnlyList<Course> Courses { get; set; } = Array.Empty<Course>();
+    [Parameter, EditorRequired] public IReadOnlyList<TimeSlot> Slots { get; set; } = Array.Empty<TimeSlot>();
+    private readonly MatchRequest form = new();
+    private bool[] selected = Array.Empty<bool>();
+    private int step = 1;
+    private string? error;
+    protected override void OnParametersSet() { if (selected.Length != Slots.Count) selected = new bool[Slots.Count]; }
+    private void Previous() { error = null; step--; }
+    private void Next()
+    {
+        error = null;
+        if (step == 1 && (string.IsNullOrWhiteSpace(form.StudentName) || string.IsNullOrWhiteSpace(form.CourseCode) || !Courses.Any(c => c.Code == form.CourseCode)))
+            error = "Entrez votre nom et choisissez un cours.";
+        else if (step == 2 && !selected.Any(x => x)) error = "Choisissez au moins une disponibilité.";
+        else if (step < 3) step++;
+        else
+        {
+            form.SlotIds = selected.Select((value, index) => (value, index)).Where(x => x.value).Select(x => x.index).ToList();
+            var json = System.Text.Json.JsonSerializer.Serialize(form);
+            // A standard browser POST is used so MVC handles the request and antiforgery token.
+            var token = Microsoft.AspNetCore.WebUtilities.WebEncoders.Base64UrlEncode(System.Text.Encoding.UTF8.GetBytes(json));
+            Navigation.NavigateTo($"/match/submit?payload={Uri.EscapeDataString(token)}", forceLoad: true);
+        }
+    }
+    [Inject] private NavigationManager Navigation { get; set; } = default!;
+}

@@ -1,0 +1,3 @@
+@model IReadOnlyList<StudyGroup>
+<h1>Groupes d'étude</h1><p>Retrouvez les étudiants qui étudient déjà ensemble.</p><a class="button" href="/match">Trouver mon groupe</a>
+<div class="grid">@foreach (var group in Model) { <article class="card"><span class="badge">@group.Course.Code</span><h2>@group.Course.Name</h2><p><strong>Membres :</strong> @string.Join(", ", group.Members.Select(m => m.Name))</p><p><strong>Horaire :</strong> @group.Slot</p><p><strong>Local :</strong> @(group.RoomName ?? "À confirmer")</p></article> }</div>
